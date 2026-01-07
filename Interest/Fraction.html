@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Advanced Fraction Calculator (BigInt Safe)</title>
+<title>Fraction Calculator – Advanced & Accurate</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -15,94 +15,105 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  font-family:Inter,system-ui,Arial;
   background:var(--bg);
 }
 .container{
-  max-width:520px;
-  margin:40px auto;
+  max-width:1200px;
+  margin:auto;
+  padding:24px;
+}
+.card{
   background:var(--card);
-  padding:22px;
   border-radius:var(--radius);
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  padding:28px;
+  box-shadow:0 12px 32px rgba(0,0,0,.08);
 }
-h1{
-  margin-top:0;
-  text-align:center;
-  font-size:1.6rem;
+h1{margin:0;color:var(--primary)}
+small{color:#555}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
 }
-.row{
-  display:flex;
-  gap:10px;
-  margin-bottom:12px;
-}
-input,select,button{
+
+input,select{
   width:100%;
-  padding:10px;
-  font-size:1rem;
-  border-radius:8px;
-  border:1px solid #d0d7e2;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:16px;
 }
+
 button{
+  width:100%;
+  padding:14px;
+  font-size:16px;
   background:var(--primary);
   color:#fff;
   border:none;
+  border-radius:12px;
   cursor:pointer;
 }
-button:hover{opacity:.9}
-.output{
-  margin-top:18px;
-  padding:12px;
-  background:#f1f5ff;
-  border-radius:10px;
-  font-size:.95rem;
-}
-#error{
-  color:#c0392b;
-  font-size:.9rem;
-  margin-top:8px;
-}
-.section{
-  margin-top:16px;
-}
+button:hover{opacity:.95}
+
+.result{font-weight:700;font-size:18px}
+.formula,.steps{font-size:14px;color:#444;line-height:1.6}
+.error{color:#dc2626;font-weight:600;margin-top:10px}
 </style>
 </head>
 
 <body>
 <div class="container">
-  <h1>Fraction Calculator</h1>
 
-  <div class="row">
-    <input id="a" placeholder="a (numerator)">
-    <input id="b" placeholder="b (denominator)">
+<div class="card">
+<h1>Fraction Calculator</h1>
+<small>Accurate fraction calculations · Big-number safe · International standards</small>
+
+<br>
+
+<div class="grid">
+  <input id="a" placeholder="Numerator a">
+  <input id="b" placeholder="Denominator b">
+  <select id="op">
+    <option value="+">+</option>
+    <option value="-">−</option>
+    <option value="*">×</option>
+    <option value="/">÷</option>
+  </select>
+  <input id="c" placeholder="Numerator c">
+  <input id="d" placeholder="Denominator d">
+</div>
+
+<br>
+<button onclick="calculate()">Calculate</button>
+<div id="error" class="error"></div>
+</div>
+
+<br>
+
+<div class="grid">
+  <div class="card">
+    <div id="output" class="result">Result = —</div>
   </div>
-
-  <div class="row">
-    <select id="op">
-      <option value="+">+</option>
-      <option value="-">−</option>
-      <option value="*">×</option>
-      <option value="/">÷</option>
-    </select>
+  <div class="card">
+    <div id="formula" class="formula"><b>Formula Used</b><br><br>—</div>
   </div>
+</div>
 
-  <div class="row">
-    <input id="c" placeholder="c (numerator)">
-    <input id="d" placeholder="d (denominator)">
-  </div>
+<br>
 
-  <button onclick="calculate()">Calculate</button>
-  <div id="error"></div>
+<div class="card">
+  <div id="steps" class="steps"><b>Step-by-Step Solution</b><br><br>—</div>
+</div>
 
-  <div id="output" class="output"></div>
-
-  <div id="formula" class="section"></div>
-  <div id="steps" class="section"></div>
 </div>
 
 <script>
 function gcdBig(a,b){
-  a=a<0n?-a:a; b=b<0n?-b:b;
+  a=a<0n?-a:a; 
+  b=b<0n?-b:b;
   while(b){[a,b]=[b,a%b]}
   return a;
 }
@@ -110,85 +121,83 @@ function gcdBig(a,b){
 function simplifyBig(n,d){
   if(d<0n){n=-n;d=-d}
   if(n===0n) return [0n,1n]
-  let g=gcdBig(n,d)
+  const g=gcdBig(n,d)
   return [n/g,d/g]
 }
 
 function safeDecimal(n,d){
-  if(d===0n) return "—";
   if(n.toString().length>30 || d.toString().length>30) return "Too large";
   return (Number(n)/Number(d)).toFixed(6);
 }
 
 function calculate(){
-  const err=document.getElementById("error");
-  err.innerText="";
+  const error=document.getElementById("error");
+  error.innerText="";
 
-  let a=document.getElementById("a").value.trim();
-  let b=document.getElementById("b").value.trim();
-  let c=document.getElementById("c").value.trim();
-  let d=document.getElementById("d").value.trim();
-  let op=document.getElementById("op").value;
+  const a=document.getElementById("a").value.trim();
+  const b=document.getElementById("b").value.trim();
+  const c=document.getElementById("c").value.trim();
+  const d=document.getElementById("d").value.trim();
+  const op=document.getElementById("op").value;
 
   if(!a||!b||!c||!d){
-    err.innerText="All fields are required.";
+    error.innerText="All fields are required.";
     return;
   }
   if(b==="0"||d==="0"){
-    err.innerText="Denominator cannot be zero.";
+    error.innerText="Denominator cannot be zero.";
     return;
   }
 
-  let A=BigInt(a),B=BigInt(b),C=BigInt(c),D=BigInt(d);
-  let n,m,steps="",formula="";
+  const A=BigInt(a), B=BigInt(b), C=BigInt(c), D=BigInt(d);
+  let n,m,formula,steps;
 
   if(op==="+"){
-    let ad=A*D, bc=B*C;
+    const ad=A*D, bc=B*C;
     n=ad+bc; m=B*D;
     formula="(a/b) + (c/d) = (ad + bc) / bd";
     steps=`ad = ${A} × ${D} = ${ad}<br>
            bc = ${B} × ${C} = ${bc}<br>
-           numerator = ad + bc = ${n}<br>
-           denominator = bd = ${m}`;
+           numerator = ${n}<br>
+           denominator = ${m}`;
   }
 
   if(op==="-"){
-    let ad=A*D, bc=B*C;
+    const ad=A*D, bc=B*C;
     n=ad-bc; m=B*D;
     formula="(a/b) − (c/d) = (ad − bc) / bd";
     steps=`ad = ${ad}<br>
            bc = ${bc}<br>
-           numerator = ad − bc = ${n}<br>
-           denominator = bd = ${m}`;
+           numerator = ${n}<br>
+           denominator = ${m}`;
   }
 
   if(op==="*"){
     n=A*C; m=B*D;
     formula="(a/b) × (c/d) = ac / bd";
-    steps=`ac = ${A} × ${C} = ${n}<br>
-           bd = ${B} × ${D} = ${m}<br>
+    steps=`ac = ${n}<br>
+           bd = ${m}<br>
            numerator = ${n}<br>
            denominator = ${m}`;
   }
 
   if(op==="/"){
     if(C===0n){
-      err.innerText="Division by zero is not allowed.";
+      error.innerText="Division by zero is not allowed.";
       return;
     }
     n=A*D; m=B*C;
     formula="(a/b) ÷ (c/d) = ad / bc";
-    steps=`ad = ${A} × ${D} = ${n}<br>
-           bc = ${B} × ${C} = ${m}<br>
+    steps=`ad = ${n}<br>
+           bc = ${m}<br>
            numerator = ${n}<br>
            denominator = ${m}`;
   }
 
-  let [sn,sd]=simplifyBig(n,m);
+  const [sn,sd]=simplifyBig(n,m);
 
   document.getElementById("output").innerHTML=
-    `<b>Result</b><br>
-     Fraction = ${sn}/${sd}<br>
+    `Simplified Fraction = ${sn}/${sd}<br>
      Decimal (safe) = ${safeDecimal(sn,sd)}`;
 
   document.getElementById("formula").innerHTML=
@@ -199,5 +208,6 @@ function calculate(){
      Simplified → ${sn}/${sd}`;
 }
 </script>
+
 </body>
 </html>
