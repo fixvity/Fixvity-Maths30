@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fraction Calculator</title>
+<title>Fraction Calculator – Advanced & Accurate</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -19,34 +19,49 @@ body{
   background:var(--bg);
 }
 .container{
-  max-width:1100px;
+  max-width:1200px;
   margin:auto;
   padding:24px;
 }
 .card{
   background:var(--card);
   border-radius:var(--radius);
-  padding:30px;
+  padding:28px;
   box-shadow:0 12px 32px rgba(0,0,0,.08);
 }
 h1{margin:0;color:var(--primary)}
 small{color:#555}
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:18px;
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-top:20px;
+  flex-wrap:wrap;
+}
+.tab{
+  padding:10px 14px;
+  background:#eef2ff;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+.tab.active{
+  background:var(--primary);
+  color:#fff;
 }
 
-label{
-  font-weight:600;
-  margin-top:16px;
-  display:block;
+.section{display:none;margin-top:20px}
+.section.active{display:block}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
 }
+
 input,select{
   width:100%;
-  padding:14px;
-  margin-top:6px;
+  padding:12px;
   border-radius:10px;
   border:1px solid #ddd;
   font-size:16px;
@@ -54,9 +69,8 @@ input,select{
 
 button{
   width:100%;
-  margin-top:26px;
-  padding:16px;
-  font-size:17px;
+  padding:14px;
+  font-size:16px;
   background:var(--primary);
   color:#fff;
   border:none;
@@ -65,19 +79,9 @@ button{
 }
 button:hover{opacity:.95}
 
-.result{
-  font-size:18px;
-  font-weight:700;
-}
-.formula{
-  font-size:15px;
-  color:#444;
-}
-.error{
-  color:#dc2626;
-  font-weight:600;
-  margin-top:12px;
-}
+.result{font-weight:700;font-size:18px}
+.formula{font-size:14px;color:#444}
+.error{color:#dc2626;font-weight:600}
 </style>
 </head>
 
@@ -88,140 +92,170 @@ button:hover{opacity:.95}
 <h1>Fraction Calculator</h1>
 <small>Accurate fraction calculations · International standards</small>
 
-<div class="grid">
-
-  <div>
-    <label>Fraction 1</label>
-    <div class="grid">
-      <input type="number" id="a" placeholder="Numerator">
-      <input type="number" id="b" placeholder="Denominator">
-    </div>
-  </div>
-
-  <div>
-    <label>Operation</label>
-    <select id="op">
-      <option value="+">Addition (+)</option>
-      <option value="-">Subtraction (−)</option>
-      <option value="*">Multiplication (×)</option>
-      <option value="/">Division (÷)</option>
-    </select>
-  </div>
-
-  <div>
-    <label>Fraction 2</label>
-    <div class="grid">
-      <input type="number" id="c" placeholder="Numerator">
-      <input type="number" id="d" placeholder="Denominator">
-    </div>
-  </div>
-
+<div class="tabs">
+  <div class="tab active" onclick="openTab(0)">Fraction Operations</div>
+  <div class="tab" onclick="openTab(1)">Simplify</div>
+  <div class="tab" onclick="openTab(2)">Decimal → Fraction</div>
+  <div class="tab" onclick="openTab(3)">Fraction → Decimal</div>
 </div>
 
-<button onclick="calculate()">Calculate Fraction</button>
+<!-- FRACTION OPERATIONS -->
+<div class="section active">
+  <div class="grid">
+    <input id="a" type="number" placeholder="Numerator a">
+    <input id="b" type="number" placeholder="Denominator b">
+    <select id="op">
+      <option value="+">+</option>
+      <option value="-">−</option>
+      <option value="*">×</option>
+      <option value="/">÷</option>
+    </select>
+    <input id="c" type="number" placeholder="Numerator c">
+    <input id="d" type="number" placeholder="Denominator d">
+  </div>
+  <br>
+  <button onclick="calcFraction()">Calculate</button>
+</div>
+
+<!-- SIMPLIFY -->
+<div class="section">
+  <div class="grid">
+    <input id="sn" type="number" placeholder="Numerator">
+    <input id="sd" type="number" placeholder="Denominator">
+  </div>
+  <br>
+  <button onclick="simplifyOnly()">Simplify</button>
+</div>
+
+<!-- DECIMAL TO FRACTION -->
+<div class="section">
+  <input id="dec" type="number" step="any" placeholder="Enter decimal (e.g. 1.375)">
+  <br><br>
+  <button onclick="decimalToFraction()">Convert</button>
+</div>
+
+<!-- FRACTION TO DECIMAL -->
+<div class="section">
+  <div class="grid">
+    <input id="fn" type="number" placeholder="Numerator">
+    <input id="fd" type="number" placeholder="Denominator">
+  </div>
+  <br>
+  <button onclick="fractionToDecimal()">Convert</button>
+</div>
+
 <div id="error" class="error"></div>
 </div>
 
-<div class="grid" style="margin-top:32px">
+<br>
+
+<div class="grid">
   <div class="card">
-    <div class="result" id="output">Result = —</div>
+    <div id="output" class="result">Result = —</div>
   </div>
   <div class="card">
-    <div class="formula" id="formulaBox">
-      <b>Formula Used</b><br><br>—
-    </div>
+    <div id="formula" class="formula"><b>Formula Used</b><br><br>—</div>
   </div>
 </div>
 
 </div>
 
 <script>
+const output = document.getElementById("output");
+const formula = document.getElementById("formula");
+const error = document.getElementById("error");
+
+function openTab(i){
+  document.querySelectorAll(".tab").forEach((t,idx)=>t.classList.toggle("active",idx===i));
+  document.querySelectorAll(".section").forEach((s,idx)=>s.classList.toggle("active",idx===i));
+  clearOutput();
+}
+
+function clearOutput(){
+  output.innerHTML="Result = —";
+  formula.innerHTML="<b>Formula Used</b><br><br>—";
+  error.innerText="";
+}
+
 function gcd(a,b){
   a=Math.abs(a); b=Math.abs(b);
-  while(b){ [a,b]=[b,a%b]; }
-  return a;
+  return b ? gcd(b,a%b) : a;
 }
 
 function simplify(n,d){
-  if(d<0){ n=-n; d=-d; }
+  if(d<0){n=-n; d=-d;}
+  if(n===0) return [0,1];
   const g=gcd(n,d);
   return [n/g,d/g];
 }
 
-function calculate(){
-  const a=Number(document.getElementById("a").value);
-  const b=Number(document.getElementById("b").value);
-  const c=Number(document.getElementById("c").value);
-  const d=Number(document.getElementById("d").value);
+function mixedNumber(n,d){
+  const sign = n<0 ? "-" : "";
+  n=Math.abs(n);
+  const whole=Math.floor(n/d);
+  const rem=n%d;
+  if(rem===0) return sign+whole;
+  if(whole===0) return sign+rem+"/"+d;
+  return sign+whole+" "+rem+"/"+d;
+}
+
+function calcFraction(){
+  clearOutput();
+  const a=+document.getElementById("a").value;
+  const b=+document.getElementById("b").value;
+  const c=+document.getElementById("c").value;
+  const d=+document.getElementById("d").value;
   const op=document.getElementById("op").value;
 
-  const error=document.getElementById("error");
-  const out=document.getElementById("output");
-  const formula=document.getElementById("formulaBox");
-
-  error.innerText="";
-  out.innerText="Result = —";
-  formula.innerHTML="<b>Formula Used</b><br><br>—";
-
-  if([a,b,c,d].some(v=>Number.isNaN(v))){
-    error.innerText="Please enter all numerator and denominator values.";
-    return;
-  }
-  if(b===0 || d===0){
-    error.innerText="Denominator cannot be zero.";
+  if([a,b,c,d].some(isNaN)||b===0||d===0){
+    error.innerText="Invalid fraction input.";
     return;
   }
 
-  let num=0, den=1, f="";
-
-  switch(op){
-    case "+":
-      num=a*d + b*c;
-      den=b*d;
-      f="(a/b) + (c/d) = (ad + bc) / bd";
-      break;
-
-    case "-":
-      num=a*d - b*c;
-      den=b*d;
-      f="(a/b) − (c/d) = (ad − bc) / bd";
-      break;
-
-    case "*":
-      num=a*c;
-      den=b*d;
-      f="(a/b) × (c/d) = ac / bd";
-      break;
-
-    case "/":
-      if(c===0){
-        error.innerText="Cannot divide by zero fraction.";
-        return;
-      }
-      num=a*d;
-      den=b*c;
-      f="(a/b) ÷ (c/d) = ad / bc";
-      break;
+  let n=0,m=1,f="";
+  if(op==="+"){n=a*d+b*c;m=b*d;f="(a/b)+(c/d)=(ad+bc)/bd";}
+  if(op==="-"){n=a*d-b*c;m=b*d;f="(a/b)-(c/d)=(ad-bc)/bd";}
+  if(op==="*"){n=a*c;m=b*d;f="(a/b)×(c/d)=ac/bd";}
+  if(op==="/"){
+    if(c===0){error.innerText="Division by zero.";return;}
+    n=a*d;m=b*c;f="(a/b)÷(c/d)=ad/bc";
   }
 
-  let [sn,sd]=simplify(num,den);
+  const [sn,sd]=simplify(n,m);
 
-  let mixed="";
-  if(Math.abs(sn)>=sd){
-    const whole=Math.trunc(sn/sd);
-    const rem=Math.abs(sn%sd);
-    mixed = rem===0 ? `${whole}` : `${whole} ${rem}/${sd}`;
-  }else{
-    mixed=`${sn}/${sd}`;
-  }
-
-  out.innerHTML=`
+  output.innerHTML=`
     Simplified Fraction = ${sn}/${sd}<br>
-    Mixed Number = ${mixed}<br>
+    Mixed Number = ${mixedNumber(sn,sd)}<br>
     Decimal = ${(sn/sd).toFixed(6)}
   `;
+  formula.innerHTML="<b>Formula Used</b><br><br>"+f;
+}
 
-  formula.innerHTML=`<b>Formula Used</b><br><br>${f}`;
+function simplifyOnly(){
+  clearOutput();
+  const n=+sn.value,d=+sd.value;
+  if(isNaN(n)||isNaN(d)||d===0){error.innerText="Invalid input.";return;}
+  const [a,b]=simplify(n,d);
+  output.innerHTML=`Simplified Fraction = ${a}/${b}`;
+}
+
+function decimalToFraction(){
+  clearOutput();
+  const x=parseFloat(dec.value);
+  if(isNaN(x)){error.innerText="Invalid decimal.";return;}
+  const s=x.toString();
+  const p=s.split(".");
+  const d=Math.pow(10,p[1]?.length||0);
+  const n=Math.round(x*d);
+  const [a,b]=simplify(n,d);
+  output.innerHTML=`Fraction = ${a}/${b}`;
+}
+
+function fractionToDecimal(){
+  clearOutput();
+  const n=+fn.value,d=+fd.value;
+  if(isNaN(n)||isNaN(d)||d===0){error.innerText="Invalid fraction.";return;}
+  output.innerHTML=`Decimal = ${(n/d).toFixed(6)}`;
 }
 </script>
 
