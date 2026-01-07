@@ -80,8 +80,8 @@ button{
 button:hover{opacity:.95}
 
 .result{font-weight:700;font-size:18px}
-.formula{font-size:14px;color:#444}
-.error{color:#dc2626;font-weight:600}
+.formula,.steps{font-size:14px;color:#444;line-height:1.6}
+.error{color:#dc2626;font-weight:600;margin-top:10px}
 </style>
 </head>
 
@@ -90,61 +90,29 @@ button:hover{opacity:.95}
 
 <div class="card">
 <h1>Fraction Calculator</h1>
-<small>Accurate fraction calculations · International standards</small>
+<small>Accurate fraction calculations · Big-number safe · International standards</small>
 
 <div class="tabs">
   <div class="tab active" onclick="openTab(0)">Fraction Operations</div>
-  <div class="tab" onclick="openTab(1)">Simplify</div>
-  <div class="tab" onclick="openTab(2)">Decimal → Fraction</div>
-  <div class="tab" onclick="openTab(3)">Fraction → Decimal</div>
 </div>
 
-<!-- FRACTION OPERATIONS -->
 <div class="section active">
   <div class="grid">
-    <input id="a" type="number" placeholder="Numerator a">
-    <input id="b" type="number" placeholder="Denominator b">
+    <input id="a" placeholder="Numerator a">
+    <input id="b" placeholder="Denominator b">
     <select id="op">
       <option value="+">+</option>
       <option value="-">−</option>
       <option value="*">×</option>
       <option value="/">÷</option>
     </select>
-    <input id="c" type="number" placeholder="Numerator c">
-    <input id="d" type="number" placeholder="Denominator d">
+    <input id="c" placeholder="Numerator c">
+    <input id="d" placeholder="Denominator d">
   </div>
   <br>
-  <button onclick="calcFraction()">Calculate</button>
+  <button onclick="calculate()">Calculate</button>
+  <div id="error" class="error"></div>
 </div>
-
-<!-- SIMPLIFY -->
-<div class="section">
-  <div class="grid">
-    <input id="sn" type="number" placeholder="Numerator">
-    <input id="sd" type="number" placeholder="Denominator">
-  </div>
-  <br>
-  <button onclick="simplifyOnly()">Simplify</button>
-</div>
-
-<!-- DECIMAL TO FRACTION -->
-<div class="section">
-  <input id="dec" type="number" step="any" placeholder="Enter decimal (e.g. 1.375)">
-  <br><br>
-  <button onclick="decimalToFraction()">Convert</button>
-</div>
-
-<!-- FRACTION TO DECIMAL -->
-<div class="section">
-  <div class="grid">
-    <input id="fn" type="number" placeholder="Numerator">
-    <input id="fd" type="number" placeholder="Denominator">
-  </div>
-  <br>
-  <button onclick="fractionToDecimal()">Convert</button>
-</div>
-
-<div id="error" class="error"></div>
 </div>
 
 <br>
@@ -158,104 +126,93 @@ button:hover{opacity:.95}
   </div>
 </div>
 
+<br>
+
+<div class="card">
+  <div class="steps" id="steps"><b>Step-by-Step Solution</b><br><br>—</div>
+</div>
+
 </div>
 
 <script>
-const output = document.getElementById("output");
-const formula = document.getElementById("formula");
-const error = document.getElementById("error");
-
-function openTab(i){
-  document.querySelectorAll(".tab").forEach((t,idx)=>t.classList.toggle("active",idx===i));
-  document.querySelectorAll(".section").forEach((s,idx)=>s.classList.toggle("active",idx===i));
-  clearOutput();
+function gcdBig(a,b){
+  a=a<0n?-a:a; b=b<0n?-b:b;
+  while(b){[a,b]=[b,a%b]}
+  return a;
 }
 
-function clearOutput(){
-  output.innerHTML="Result = —";
-  formula.innerHTML="<b>Formula Used</b><br><br>—";
-  error.innerText="";
+function simplifyBig(n,d){
+  if(d<0n){n=-n;d=-d}
+  if(n===0n) return [0n,1n]
+  let g=gcdBig(n,d)
+  return [n/g,d/g]
 }
 
-function gcd(a,b){
-  a=Math.abs(a); b=Math.abs(b);
-  return b ? gcd(b,a%b) : a;
-}
+function calculate(){
+  const err=document.getElementById("error")
+  err.innerText=""
 
-function simplify(n,d){
-  if(d<0){n=-n; d=-d;}
-  if(n===0) return [0,1];
-  const g=gcd(n,d);
-  return [n/g,d/g];
-}
+  let a=document.getElementById("a").value.trim()
+  let b=document.getElementById("b").value.trim()
+  let c=document.getElementById("c").value.trim()
+  let d=document.getElementById("d").value.trim()
+  let op=document.getElementById("op").value
 
-function mixedNumber(n,d){
-  const sign = n<0 ? "-" : "";
-  n=Math.abs(n);
-  const whole=Math.floor(n/d);
-  const rem=n%d;
-  if(rem===0) return sign+whole;
-  if(whole===0) return sign+rem+"/"+d;
-  return sign+whole+" "+rem+"/"+d;
-}
+  if(!a||!b||!c||!d){err.innerText="All fields required";return}
+  if(b==="0"||d==="0"){err.innerText="Denominator cannot be zero";return}
 
-function calcFraction(){
-  clearOutput();
-  const a=+document.getElementById("a").value;
-  const b=+document.getElementById("b").value;
-  const c=+document.getElementById("c").value;
-  const d=+document.getElementById("d").value;
-  const op=document.getElementById("op").value;
+  let A=BigInt(a),B=BigInt(b),C=BigInt(c),D=BigInt(d)
 
-  if([a,b,c,d].some(isNaN)||b===0||d===0){
-    error.innerText="Invalid fraction input.";
-    return;
+  let n,m,steps="",formula=""
+
+  if(op==="+"){
+    n=A*D+B*C
+    m=B*D
+    formula="(a/b) + (c/d) = (ad + bc) / bd"
+    steps=`ad = ${A}×${D} = ${A*D}<br>
+           bc = ${B}×${C} = ${B*C}<br>
+           numerator = ${n}<br>
+           denominator = ${m}`
   }
 
-  let n=0,m=1,f="";
-  if(op==="+"){n=a*d+b*c;m=b*d;f="(a/b)+(c/d)=(ad+bc)/bd";}
-  if(op==="-"){n=a*d-b*c;m=b*d;f="(a/b)-(c/d)=(ad-bc)/bd";}
-  if(op==="*"){n=a*c;m=b*d;f="(a/b)×(c/d)=ac/bd";}
+  if(op==="-"){
+    n=A*D-B*C
+    m=B*D
+    formula="(a/b) − (c/d) = (ad − bc) / bd"
+    steps=`ad = ${A*D}<br>
+           bc = ${B*C}<br>
+           numerator = ${n}<br>
+           denominator = ${m}`
+  }
+
+  if(op==="*"){
+    n=A*C
+    m=B*D
+    formula="(a/b) × (c/d) = ac / bd"
+    steps=`ac = ${n}<br>
+           bd = ${m}`
+  }
+
   if(op==="/"){
-    if(c===0){error.innerText="Division by zero.";return;}
-    n=a*d;m=b*c;f="(a/b)÷(c/d)=ad/bc";
+    if(C===0n){err.innerText="Division by zero";return}
+    n=A*D
+    m=B*C
+    formula="(a/b) ÷ (c/d) = ad / bc"
+    steps=`ad = ${n}<br>
+           bc = ${m}`
   }
 
-  const [sn,sd]=simplify(n,m);
+  let [sn,sd]=simplifyBig(n,m)
 
-  output.innerHTML=`
-    Simplified Fraction = ${sn}/${sd}<br>
-    Mixed Number = ${mixedNumber(sn,sd)}<br>
-    Decimal = ${(sn/sd).toFixed(6)}
-  `;
-  formula.innerHTML="<b>Formula Used</b><br><br>"+f;
-}
+  document.getElementById("output").innerHTML=
+    `Simplified Fraction = ${sn}/${sd}`
 
-function simplifyOnly(){
-  clearOutput();
-  const n=+sn.value,d=+sd.value;
-  if(isNaN(n)||isNaN(d)||d===0){error.innerText="Invalid input.";return;}
-  const [a,b]=simplify(n,d);
-  output.innerHTML=`Simplified Fraction = ${a}/${b}`;
-}
+  document.getElementById("formula").innerHTML=
+    `<b>Formula Used</b><br><br>${formula}`
 
-function decimalToFraction(){
-  clearOutput();
-  const x=parseFloat(dec.value);
-  if(isNaN(x)){error.innerText="Invalid decimal.";return;}
-  const s=x.toString();
-  const p=s.split(".");
-  const d=Math.pow(10,p[1]?.length||0);
-  const n=Math.round(x*d);
-  const [a,b]=simplify(n,d);
-  output.innerHTML=`Fraction = ${a}/${b}`;
-}
-
-function fractionToDecimal(){
-  clearOutput();
-  const n=+fn.value,d=+fd.value;
-  if(isNaN(n)||isNaN(d)||d===0){error.innerText="Invalid fraction.";return;}
-  output.innerHTML=`Decimal = ${(n/d).toFixed(6)}`;
+  document.getElementById("steps").innerHTML=
+    `<b>Step-by-Step Solution</b><br><br>${steps}<br><br>
+     Simplified → ${sn}/${sd}`
 }
 </script>
 
